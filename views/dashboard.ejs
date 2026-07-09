@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Statbot Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body style="background:#111; color:#0f0; font-family:Arial; padding:20px;">
+  <h1>📊 Statbot - Статистика</h1>
+  <% stats.forEach(s => { %>
+    <div style="background:#222; padding:15px; margin:10px; border-radius:8px;">
+      <h2><%= s.name || 'Сервер' %></h2>
+      <p>Участников: <b><%= s.memberCount %></b> | Онлайн: <b><%= s.onlineCount %></b></p>
+      <p>Сообщений всего: <b><%= s.totalMessages %></b></p>
+    </div>
+  <% }) %>
+</body>
+</html>
