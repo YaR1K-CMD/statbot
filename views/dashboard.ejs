@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <title>Statbot Dashboard</title>
-  <!-- Подключение Chart.js -->
   <script src="https://jsdelivr.net"></script>
 </head>
 <body style="background:#111; color:#0f0; font-family: 'Courier New', Arial, sans-serif; padding:20px; max-width: 1200px; margin: 0 auto;">
   
   <h1 style="text-align: center; border-bottom: 2px dashed #0f0; padding-bottom: 10px;">📊 Statbot — Аналитика Серверов</h1>
   
-  <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
+  <!-- Контейнер, который будет обновляться -->
+  <div id="dashboard-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
     <% stats.forEach((s, index) => { %>
-      <div style="background:#1a1a1a; padding:20px; border: 1px solid #333; border-radius:12px; width: 340px; box-shadow: 0 4px 15px rgba(0,255,0,0.05);">
+      <div class="server-card" data-guild="<%= s.guildId %>" style="background:#1a1a1a; padding:20px; border: 1px solid #333; border-radius:12px; width: 340px; box-shadow: 0 4px 15px rgba(0,255,0,0.05);">
         <h2 style="color: #fff; margin-top: 0; text-shadow: 0 0 5px #0f0;"><%= s.name || 'Сервер' %></h2>
         
-        <p>Сообщений всего: <b style="color: #0f0;"><%= s.totalMessages %></b></p>
-        <p>Всего участников: <b><%= s.memberCount %></b></p>
+        <p>Сообщений всего: <b class="msg-count" style="color: #0f0;"><%= s.totalMessages %></b></p>
+        <p>Всего участников: <b class="member-count"><%= s.memberCount %></b></p>
+        <p>Онлайн: <b class="online-count" style="color: #00ff00;"><%= s.onlineCount %></b></p>
         
-        <!-- Контейнер для графика (Обязательно фиксированная высота) -->
         <div style="position: relative; height:200px; width:100%; margin-top: 15px;">
           <canvas id="chart-<%= index %>"></canvas>
         </div>
@@ -27,10 +27,15 @@
   </div>
 
   <script>
-    // Передаем данные из EJS в клиентский JavaScript безопасным способом
-    const serversData = [
-      <% stats.forEach(s => { %>
+    // Массив для хранения инстансов графиков, чтобы обновлять их на лету
+    const charts = {};
+
+    // Данные серверов из EJS при первой загрузке
+    const initialData = [
+      <% stats.forEach((s, index) => { %>
         {
+          index: <%= index %>,
+          guildId: "<%= s.guildId %>",
           name: "<%= s.name %>",
           total: <%= s.memberCount %>,
           online: <%= s.onlineCount %>,
@@ -39,17 +44,17 @@
       <% }) %>
     ];
 
-    // Инициализируем графики для каждого сервера
-    serversData.forEach((server, index) => {
-      const ctx = document.getElementById(`chart-${index}`).getContext('2d');
+    // Инициализация графиков
+    initialData.forEach((server) => {
+      const ctx = document.getElementById(`chart-${server.index}`).getContext('2d');
       
-      new Chart(ctx, {
-        type: 'doughnut', // Круговая диаграмма с вырезом
+      charts[server.guildId] = new Chart(ctx, {
+        type: 'doughnut',
         data: {
           labels: ['Онлайн', 'Офлайн'],
           datasets: [{
             data: [server.online, server.offline],
-            backgroundColor: ['#00ff00', '#333333'], // Ярко-зеленый и темно-серый
+            backgroundColor: ['#00ff00', '#333333'],
             borderColor: '#1a1a1a',
             borderWidth: 2
           }]
@@ -60,15 +65,49 @@
           plugins: {
             legend: {
               position: 'bottom',
-              labels: {
-                color: '#fff',
-                font: { family: 'Arial' }
-              }
+              labels: { color: '#fff', font: { family: 'Arial' } }
             }
           }
         }
       });
     });
+
+    // Функция авто-обновления данных каждые 5 секунд без перезагрузки страницы
+    async function updateStats() {
+      try {
+        // Запрашиваем свежие данные из API (создадим его на следующем шаге)
+        const response = await fetch('/api/stats');
+        if (!response.ok) return;
+        const data = await response.json();
+
+        // Проходимся по каждой карточке сервера на странице
+        document.querySelectorAll('.server-card').forEach(card => {
+          const guildId = card.getAttribute('data-guild');
+          const serverStats = data.find(s => s.guildId === guildId);
+
+          if (serverStats) {
+            // Обновляем текст на странице
+            card.querySelector('.msg-count').innerText = serverStats.totalMessages;
+            card.querySelector('.member-count').innerText = serverStats.memberCount;
+            card.querySelector('.online-count').innerText = serverStats.onlineCount;
+
+            // Обновляем график
+            const chart = charts[guildId];
+            if (chart) {
+              const offline = serverStats.memberCount - serverStats.onlineCount;
+              chart.data.datasets[0].data = [serverStats.onlineCount, offline < 0 ? 0 : offline];
+              chart.update('none'); // Обновляем плавно без лишней анимации
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Ошибка обновления статистики:', err);
+      }
+    }
+
+    // Запускаем опрос каждые 5000 мс (5 секунд)
+    setInterval(updateStats, 5000);
   </script>
 </body>
 </html>
+
