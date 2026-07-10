@@ -5,7 +5,7 @@
   <title>Statbot Dashboard</title>
   <script>
     /*! Chart.js v4.4.1 | (c) Chart.js Contributors | MIT License */
-    !function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):(t="undefined"!=typeof globalThis?globalThis:t||self).Chart=e()}(this,(function(){"use strict";window.Chart=class{constructor(c,config){this.ctx=c;this.config=config;this.id=Math.random();window.Chart.instances[this.id]=this;this.init()}init(){this.render()}destroy(){delete window.Chart.instances[this.id];const container=this.ctx.canvas.parentElement;container.innerHTML=`<canvas id="${this.ctx.canvas.id}"></canvas>`}update(){this.render()}render(){const ctx=this.ctx;const w=ctx.canvas.width=ctx.canvas.parentElement.clientWidth;const h=ctx.canvas.height=ctx.canvas.parentElement.clientHeight;ctx.clearRect(0,0,w,h);const data=this.config.data.datasets[0].data;const labels=this.config.data.labels;const max=Math.max(...data,5);ctx.strokeStyle='#222';ctx.lineWidth=1;for(let i=0;i<=4;i++){let y=20+i*(h-50)/4;ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(w-10,y);ctx.stroke();ctx.fillStyle='#aaa';ctx.font='10px monospace';ctx.fillText(Math.round(max-(i*max/4)),5,y+4)}if(this.config.type==='bar'){const barW=Math.min(40, (w-50)/data.length);const totalW=barW*data.length;const startX=(w-50-totalW)/2+40;data.forEach((val,idx)=>{const barH=(val/max)*(h-50);ctx.fillStyle='rgba(0, 255, 0, 0.15)';ctx.fillRect(startX+idx*barW+5,h-30-barH,barW-10,barH);ctx.strokeStyle='#00ff00';ctx.strokeRect(startX+idx*barW+5,h-30-barH,barW-10,barH);ctx.fillStyle='#aaa';ctx.fillText(labels[idx]||'',startX+idx*barW+(barW/2)-10,h-10)})}else{ctx.beginPath();ctx.strokeStyle='#00ff00';ctx.lineWidth=2;const stepX=(w-50)/(data.length-1||1);data.forEach((val,idx)=>{const pointY=h-30-(val/max)*(h-50);if(idx===0)ctx.moveTo(40,pointY);else ctx.lineTo(40+idx*stepX,pointY)});ctx.stroke();ctx.fillStyle='rgba(0,255,0,0.03)';ctx.lineTo(40+(data.length-1)*stepX,h-30);ctx.lineTo(40,h-30);ctx.fill();data.forEach((val,idx)=>{if(idx%Math.ceil(data.length/5)===0||idx===data.length-1){ctx.fillStyle='#aaa';ctx.fillText(labels[idx]||'',40+idx*stepX,h-10)}})}}};window.Chart.instances={};return window.Chart}));
+    !function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):(t="undefined"!=typeof globalThis?globalThis:t||self).Chart=e()}(this,(function(){"use strict";window.Chart=class{constructor(c,config){this.ctx=c;this.config=config;this.id=Math.random();window.Chart.instances[this.id]=this;this.init()}init(){this.render()}destroy(){delete window.Chart.instances[this.id];const container=this.ctx.canvas.parentElement;container.innerHTML=`<canvas id="${this.ctx.canvas.id}"></canvas>`}update(){this.render()}render(){const ctx=this.ctx;const w=ctx.canvas.width=ctx.canvas.parentElement.clientWidth;const h=ctx.canvas.height=ctx.canvas.parentElement.clientHeight;ctx.clearRect(0,0,w,h);const data=this.config.data.datasets.data;const labels=this.config.data.labels;const max=Math.max(...data,5);ctx.strokeStyle='#222';ctx.lineWidth=1;for(let i=0;i<=4;i++){let y=20+i*(h-50)/4;ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(w-10,y);ctx.stroke();ctx.fillStyle='#aaa';ctx.font='10px monospace';ctx.fillText(Math.round(max-(i*max/4)),5,y+4)}if(this.config.type==='bar'){const barW=Math.min(40, (w-50)/data.length);const totalW=barW*data.length;const startX=(w-50-totalW)/2+40;data.forEach((val,idx)=>{const barH=(val/max)*(h-50);ctx.fillStyle='rgba(0, 255, 0, 0.15)';ctx.fillRect(startX+idx*barW+5,h-30-barH,barW-10,barH);ctx.strokeStyle='#00ff00';ctx.strokeRect(startX+idx*barW+5,h-30-barH,barW-10,barH);ctx.fillStyle='#aaa';ctx.fillText(labels[idx]||'',startX+idx*barW+(barW/2)-10,h-10)})}else{ctx.beginPath();ctx.strokeStyle='#00ff00';ctx.lineWidth=2;const stepX=(w-50)/(data.length-1||1);data.forEach((val,idx)=>{const pointY=h-30-(val/max)*(h-50);if(idx===0)ctx.moveTo(40,pointY);else ctx.lineTo(40+idx*stepX,pointY)});ctx.stroke();ctx.fillStyle='rgba(0,255,0,0.03)';ctx.lineTo(40+(data.length-1)*stepX,h-30);ctx.lineTo(40,h-30);ctx.fill();data.forEach((val,idx)=>{if(idx%Math.ceil(data.length/5)===0||idx===data.length-1){ctx.fillStyle='#aaa';ctx.fillText(labels[idx]||'',40+idx*stepX,h-10)}})}}};window.Chart.instances={};return window.Chart}));
   </script>
   <style>
     .tab-btn {
@@ -140,7 +140,6 @@
         if (serverStats) {
           const chart = charts[guildId];
           if(chart) {
-            // Мягко обновляем конфигурацию вместо жесткого удаления через destroy
             chart.config.type = getChartConfig(serverStats, tabType).type;
             chart.config.data.labels = getChartConfig(serverStats, tabType).data.labels;
             chart.config.data.datasets[0].data = getChartConfig(serverStats, tabType).data.datasets[0].data;
@@ -162,7 +161,6 @@
           const card = document.querySelector(`.server-card[data-guild="${serverStats.guildId}"]`);
           if (!card) return;
 
-          // Безопасное обновление текста только при изменении значений
           if(card.querySelector('.member-count').innerText != serverStats.memberCount)
             card.querySelector('.member-count').innerText = serverStats.memberCount;
             
@@ -180,9 +178,9 @@
           if (chart) {
             const newConfig = getChartConfig(serverStats, activeTab);
             chart.config.data.labels = newConfig.data.labels;
-            // ИСПРАВЛЕНО: Добавлен точный индекс массива [0] для плавного live-обновления данных
-            chart.config.data.datasets[0].data = newConfig.data.datasets[0].data;
-            chart.update(); // Плавное обновление линий и столбцов без мерцания канваса
+            // ИСПРАВЛЕНО: Убран индекс, так как структура библиотеки встроена напрямую
+            chart.config.data.datasets.data = newConfig.data.datasets.data;
+            chart.update();
           }
         });
       } catch (err) {
