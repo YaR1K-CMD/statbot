@@ -1,17 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+  <meta charset="UTF-8">
   <title>Statbot Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Подключение Chart.js -->
+  <script src="https://jsdelivr.net"></script>
 </head>
-<body style="background:#111; color:#0f0; font-family:Arial; padding:20px;">
-  <h1>📊 Statbot - Статистика</h1>
-  <% stats.forEach(s => { %>
-    <div style="background:#222; padding:15px; margin:10px; border-radius:8px;">
-      <h2><%= s.name || 'Сервер' %></h2>
-      <p>Участников: <b><%= s.memberCount %></b> | Онлайн: <b><%= s.onlineCount %></b></p>
-      <p>Сообщений всего: <b><%= s.totalMessages %></b></p>
-    </div>
-  <% }) %>
+<body style="background:#111; color:#0f0; font-family: 'Courier New', Arial, sans-serif; padding:20px; max-width: 1200px; margin: 0 auto;">
+  
+  <h1 style="text-align: center; border-bottom: 2px dashed #0f0; padding-bottom: 10px;">📊 Statbot — Аналитика Серверов</h1>
+  
+  <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
+    <% stats.forEach((s, index) => { %>
+      <div style="background:#1a1a1a; padding:20px; border: 1px solid #333; border-radius:12px; width: 340px; box-shadow: 0 4px 15px rgba(0,255,0,0.05);">
+        <h2 style="color: #fff; margin-top: 0; text-shadow: 0 0 5px #0f0;"><%= s.name || 'Сервер' %></h2>
+        
+        <p>Сообщений всего: <b style="color: #0f0;"><%= s.totalMessages %></b></p>
+        <p>Всего участников: <b><%= s.memberCount %></b></p>
+        
+        <!-- Контейнер для графика (Обязательно фиксированная высота) -->
+        <div style="position: relative; height:200px; width:100%; margin-top: 15px;">
+          <canvas id="chart-<%= index %>"></canvas>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+
+  <script>
+    // Передаем данные из EJS в клиентский JavaScript безопасным способом
+    const serversData = [
+      <% stats.forEach(s => { %>
+        {
+          name: "<%= s.name %>",
+          total: <%= s.memberCount %>,
+          online: <%= s.onlineCount %>,
+          offline: <%= s.memberCount - s.onlineCount %>
+        },
+      <% }) %>
+    ];
+
+    // Инициализируем графики для каждого сервера
+    serversData.forEach((server, index) => {
+      const ctx = document.getElementById(`chart-${index}`).getContext('2d');
+      
+      new Chart(ctx, {
+        type: 'doughnut', // Круговая диаграмма с вырезом
+        data: {
+          labels: ['Онлайн', 'Офлайн'],
+          datasets: [{
+            data: [server.online, server.offline],
+            backgroundColor: ['#00ff00', '#333333'], // Ярко-зеленый и темно-серый
+            borderColor: '#1a1a1a',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#fff',
+                font: { family: 'Arial' }
+              }
+            }
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>
