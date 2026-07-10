@@ -9,19 +9,10 @@
       background: #222; color: #0f0; border: 1px solid #0f0; 
       padding: 6px 12px; cursor: pointer; border-radius: 4px; font-family: monospace;
     }
-    .tab-btn.active {
-      background: #0f0; color: #111; font-weight: bold;
-    }
-    .stat-box {
-      background: #111; border: 1px solid #222; padding: 10px; border-radius: 6px; text-align: center; flex: 1; min-width: 60px;
-    }
-    .server-icon {
-      width: 50px; height: 50px; border-radius: 50%; border: 1px solid #0f0; object-fit: cover;
-    }
-    .avatar-placeholder {
-      width: 50px; height: 50px; border-radius: 50%; border: 1px solid #0f0;
-      background: #222; color: #0f0; display: flex; align-items: center; justify-content: center; font-weight: bold;
-    }
+    .tab-btn.active { background: #0f0; color: #111; font-weight: bold; }
+    .stat-box { background: #111; border: 1px solid #222; padding: 10px; border-radius: 6px; text-align: center; flex: 1; min-width: 60px; }
+    .server-icon { width: 50px; height: 50px; border-radius: 50%; border: 1px solid #0f0; object-fit: cover; }
+    .avatar-placeholder { width: 50px; height: 50px; border-radius: 50%; border: 1px solid #0f0; background: #222; color: #0f0; display: flex; align-items: center; justify-content: center; font-weight: bold; }
   </style>
 </head>
 <body style="background:#111; color:#0f0; font-family: 'Courier New', Arial, sans-serif; padding:20px; max-width: 1200px; margin: 0 auto;">
@@ -29,10 +20,9 @@
   <h1 style="text-align: center; border-bottom: 2px dashed #0f0; padding-bottom: 10px;">Statbot — Аналитика Серверов</h1>
   
   <div id="dashboard-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
-    <% stats.forEach((s, index) => { %>
+    <% stats.forEach((s) => { %>
       <div class="server-card" data-guild="<%= s.guildId %>" style="background:#1a1a1a; padding:20px; border: 1px solid #333; border-radius:12px; width: 360px; box-shadow: 0 4px 15px rgba(0,255,0,0.05); position: relative;">
         
-        <!-- Верхняя шапка карточки: Название и Иконка в углу -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
           <h2 style="color: #fff; margin: 0; text-shadow: 0 0 5px #0f0; max-width: 270px; word-wrap: break-word;"><%= s.name || 'Сервер' %></h2>
           <div>
@@ -44,10 +34,8 @@
           </div>
         </div>
         
-        <!-- Общий блок участников -->
         <p style="margin: 5px 0;">Участников: <b class="member-count"><%= s.memberCount %></b> | Онлайн: <b class="online-count" style="color: #00ff00;"><%= s.onlineCount %></b></p>
         
-        <!-- Сетка статистики сообщений по периодам -->
         <div style="display: flex; gap: 8px; margin: 15px 0; font-size: 12px;">
           <div class="stat-box">День<br><b class="cnt-day" style="color:#fff;"><%= s.periods.day %></b></div>
           <div class="stat-box">Неделя<br><b class="cnt-week" style="color:#fff;"><%= s.periods.week %></b></div>
@@ -55,7 +43,6 @@
           <div class="stat-box">Всего<br><b class="cnt-all" style="color:#0f0;"><%= s.periods.all %></b></div>
         </div>
 
-        <!-- Переключатели вкладок графика -->
         <div style="display: flex; gap: 5px; margin-bottom: 10px; justify-content: center;">
           <button class="tab-btn active" onclick="switchTab('<%= s.guildId %>', 'day')">День</button>
           <button class="tab-btn" onclick="switchTab('<%= s.guildId %>', 'week')">Неделя</button>
@@ -63,7 +50,6 @@
           <button class="tab-btn" onclick="switchTab('<%= s.guildId %>', 'all')">Всего</button>
         </div>
         
-        <!-- Контейнер для линейного графика трендов -->
         <div style="position: relative; height:200px; width:100%; margin-top: 5px;">
           <canvas id="chart-<%= s.guildId %>"></canvas>
         </div>
@@ -73,16 +59,15 @@
 
   <script>
     const charts = {};
-    const currentTabs = {}; // Хранит активную вкладку для каждого сервера (по умолчанию 'day')
+    const currentTabs = {};
 
-    // Получаем первоначальные серверные данные из шаблонизатора EJS
-    const rawData = <%- JSON.stringify(stats) %>;
-
-    // Функция отрисовки/обновления конфигурации графика под выбранный тип вкладки
     function getChartConfig(server, tabType) {
       let labels = [];
       let datasetsData = [];
-      let chartType = 'bar'; // Для 'day' и 'all' красивее использовать столбцы, для периодов — линии
+      let chartType = 'bar';
+
+      // Флаг min/max, чтобы пустые графики всё равно отрисовывались и не создавали пустоту
+      let hasData = true;
 
       if (tabType === 'day') {
         labels = ['Сегодня'];
@@ -109,7 +94,7 @@
           datasets: [{
             label: 'Сообщения',
             data: datasetsData,
-            backgroundColor: 'rgba(0, 255, 0, 0.2)',
+            backgroundColor: 'rgba(0, 255, 0, 0.15)',
             borderColor: '#00ff00',
             borderWidth: 2,
             tension: 0.3,
@@ -121,25 +106,31 @@
           maintainAspectRatio: false,
           scales: {
             x: { grid: { color: '#222' }, ticks: { color: '#aaa' } },
-            y: { grid: { color: '#222' }, ticks: { color: '#aaa', beginAtZero: true } }
+            y: { grid: { color: '#222' }, ticks: { color: '#aaa' }, min: 0, max: Math.max(...datasetsData, 5) } // Минимум шкалы до 5, чтобы сетка была видна при 0 сообщений
           },
           plugins: { legend: { display: false } }
         }
       };
     }
 
-    // Первичная инициализация графиков при загрузке страницы
-    rawData.forEach(server => {
-      currentTabs[server.guildId] = 'day'; // По умолчанию вкладка День
-      const ctx = document.getElementById(`chart-${server.guildId}`).getContext('2d');
-      charts[server.guildId] = new Chart(ctx, getChartConfig(server, 'day'));
-    });
+    async function initDashboard() {
+      try {
+        const response = await fetch('/api/stats');
+        if (!response.ok) return;
+        const data = await response.json();
 
-    // Функция переключения вкладок пользователем
-    function switchTab(guildId, tabType) {
+        data.forEach(server => {
+          currentTabs[server.guildId] = 'day';
+          const ctx = document.getElementById(`chart-${server.guildId}`).getContext('2d');
+          charts[server.guildId] = new Chart(ctx, getChartConfig(server, 'day'));
+        });
+      } catch (err) {
+        console.error('Ошибка инициализации:', err);
+      }
+    }
+
+    async function switchTab(guildId, tabType) {
       currentTabs[guildId] = tabType;
-      
-      // Меняем активный класс у кнопок внутри карточки конкретного сервера
       const card = document.querySelector(`.server-card[data-guild="${guildId}"]`);
       card.querySelectorAll('.tab-btn').forEach(btn => {
         if(btn.getAttribute('onclick').includes(`'${tabType}'`)) {
@@ -149,30 +140,31 @@
         }
       });
 
-      // Перестраиваем график на лету
-      fetch('/api/stats')
-        .then(res => res.json())
-        .then(data => {
-          const serverStats = data.find(s => s.guildId === guildId);
-          if (serverStats) {
-            const chart = charts[guildId];
-            const config = getChartConfig(serverStats, tabType);
-            
-            // Если тип графика сменился (например, с bar на line), Chart.js нужно уничтожить и создать заново
-            if (chart.config.type !== config.type) {
-              chart.destroy();
-              const ctx = document.getElementById(`chart-${guildId}`).getContext('2d');
-              charts[guildId] = new Chart(ctx, config);
-            } else {
-              chart.data.labels = config.data.labels;
-              chart.data.datasets[0].data = config.data.datasets[0].data;
-              chart.update();
-            }
+      try {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        const serverStats = data.find(s => s.guildId === guildId);
+        
+        if (serverStats) {
+          const chart = charts[guildId];
+          const config = getChartConfig(serverStats, tabType);
+          
+          if (chart.config.type !== config.type) {
+            chart.destroy();
+            const ctx = document.getElementById(`chart-${guildId}`).getContext('2d');
+            charts[guildId] = new Chart(ctx, config);
+          } else {
+            chart.data.labels = config.data.labels;
+            chart.data.datasets[0].data = config.data.datasets[0].data;
+            chart.options.scales.y.max = config.options.scales.y.max;
+            chart.update();
           }
-        });
+        }
+      } catch (err) {
+        console.error(err);
+      }
     }
 
-    // Фоновое автообновление данных в реальном времени каждые 5 секунд
     async function updateStatsLive() {
       try {
         const response = await fetch('/api/stats');
@@ -183,7 +175,6 @@
           const card = document.querySelector(`.server-card[data-guild="${serverStats.guildId}"]`);
           if (!card) return;
 
-          // Обновление текстовых счетчиков
           card.querySelector('.member-count').innerText = serverStats.memberCount;
           card.querySelector('.online-count').innerText = serverStats.onlineCount;
           card.querySelector('.cnt-day').innerText = serverStats.periods.day;
@@ -191,7 +182,6 @@
           card.querySelector('.cnt-month').innerText = serverStats.periods.month;
           card.querySelector('.cnt-all').innerText = serverStats.periods.all;
 
-          // Динамическое обновление текущей активной вкладки графика без сброса анимации
           const activeTab = currentTabs[serverStats.guildId];
           const chart = charts[serverStats.guildId];
           const config = getChartConfig(serverStats, activeTab);
@@ -199,15 +189,22 @@
           if (chart && chart.config.type === config.type) {
             chart.data.labels = config.data.labels;
             chart.data.datasets[0].data = config.data.datasets[0].data;
+            chart.options.scales.y.max = config.options.scales.y.max;
             chart.update('none'); 
           }
         });
       } catch (err) {
-        console.error('Ошибка синхронизации данных:', err);
+        console.error(err);
       }
     }
 
-    setInterval(updateStatsLive, 5000);
+    // Запускаем отрисовку после полной загрузки документа
+    document.addEventListener("DOMContentLoaded", () => {
+      initDashboard();
+      setInterval(updateStatsLive, 5000);
+    });
   </script>
 </body>
+</html>
+
 </html>
