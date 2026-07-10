@@ -60,129 +60,342 @@
     <% }) %>
   </div>
 
-  <script>
-    const charts = {};
-    const currentTabs = {};
+<script>
+const charts = {};
+const currentTabs = {};
+const serverCache = {};
 
-    function getChartConfig(server, tabType) {
-      let labels = [];
-      let datasetsData = [];
-      let chartType = 'bar';
+function safeText(el, value) {
+  if (!el) return;
 
-      if (tabType === 'day') {
-        labels = ['Сегодня'];
-        datasetsData = [server.periods.day];
-        chartType = 'bar';
-      } else if (tabType === 'week') {
-        labels = server.charts.week.labels;
-        datasetsData = server.charts.week.data;
-        chartType = 'line';
-      } else if (tabType === 'month') {
-        labels = server.charts.month.labels;
-        datasetsData = server.charts.month.data;
-        chartType = 'line';
-      } else if (tabType === 'all') {
-        labels = ['Все время'];
-        datasetsData = [server.periods.all];
-        chartType = 'bar';
+  const newValue = String(value ?? '');
+
+  if (el.innerText != newValue) {
+    el.innerText = newValue;
+  }
+}
+
+function normalizeServer(server) {
+  return {
+    guildId: server.guildId,
+    memberCount: server.memberCount ?? 0,
+    onlineCount: server.onlineCount ?? 0,
+    periods: {
+      day: server.periods?.day ?? 0,
+      week: server.periods?.week ?? 0,
+      month: server.periods?.month ?? 0,
+      all: server.periods?.all ?? 0
+    },
+    charts: {
+      week: {
+        labels: server.charts?.week?.labels ?? [],
+        data: server.charts?.week?.data ?? []
+      },
+      month: {
+        labels: server.charts?.month?.labels ?? [],
+        data: server.charts?.month?.data ?? []
       }
+    }
+  };
+}
 
-      return {
-        type: chartType,
-        data: {
-          labels: labels,
-          datasets: [{
-            data: datasetsData
-          }]
+
+function getChartConfig(server, tabType) {
+  server = normalizeServer(server);
+
+  let labels = [];
+  let values = [];
+  let type = 'bar';
+
+
+  switch(tabType) {
+
+    case 'week':
+      labels = server.charts.week.labels;
+      values = server.charts.week.data;
+      type = 'line';
+      break;
+
+    case 'month':
+      labels = server.charts.month.labels;
+      values = server.charts.month.data;
+      type = 'line';
+      break;
+
+    case 'all':
+      labels = ['Все время'];
+      values = [server.periods.all];
+      type = 'bar';
+      break;
+
+    default:
+      labels = ['Сегодня'];
+      values = [server.periods.day];
+      type = 'bar';
+  }
+
+
+  return {
+    type,
+    data: {
+      labels,
+      datasets: [
+        {
+          data: values
         }
-      };
+      ]
     }
+  };
+}
 
-    async function initDashboard() {
-      try {
-        const response = await fetch('/api/stats');
-        if (!response.ok) return;
-        const data = await response.json();
 
-        data.forEach(server => {
-          currentTabs[server.guildId] = 'day';
-          const el = document.getElementById(`chart-${server.guildId}`);
-          if(el) {
-            const ctx = el.getContext('2d');
-            charts[server.guildId] = new Chart(ctx, getChartConfig(server, 'day'));
-          }
-        });
-      } catch (err) {
-        console.error('Ошибка инициализации:', err);
-      }
-    }
 
-    async function switchTab(guildId, tabType) {
-      currentTabs[guildId] = tabType;
-      const card = document.querySelector(`.server-card[data-guild="${guildId}"]`);
+function updateChart(chart, config) {
+
+  if (!chart || !config) return;
+
+
+  chart.config.type = config.type;
+
+  chart.config.data.labels =
+    config.data.labels;
+
+
+  chart.config.data.datasets[0].data =
+    config.data.datasets[0].data;
+
+
+  if (typeof chart.update === 'function') {
+    chart.update();
+  }
+}
+
+
+
+async function initDashboard() {
+
+  try {
+
+    const response = await fetch('/api/stats');
+
+    if (!response.ok) return;
+
+
+    const data = await response.json();
+
+
+    data.forEach(rawServer => {
+
+      const server = normalizeServer(rawServer);
+
+      serverCache[server.guildId] = server;
+
+      currentTabs[server.guildId] = 'day';
+
+
+      const canvas =
+        document.getElementById(`chart-${server.guildId}`);
+
+
+      if (!canvas) return;
+
+
+      const ctx = canvas.getContext('2d');
+
+
+      charts[server.guildId] =
+        new Chart(
+          ctx,
+          getChartConfig(server,'day')
+        );
+
+    });
+
+
+  } catch(error) {
+
+    console.error(
+      'Dashboard init error:',
+      error
+    );
+
+  }
+
+}
+
+
+
+
+async function switchTab(guildId, tabType) {
+
+  currentTabs[guildId] = tabType;
+
+
+  const card =
+    document.querySelector(
+      `.server-card[data-guild="${guildId}"]`
+    );
+
+
+  if (!card) return;
+
+
+
+  card
+    .querySelectorAll('.tab-btn')
+    .forEach(button => {
+
+      const active =
+        button.dataset.tab === tabType;
+
+
+      button.classList.toggle(
+        'active',
+        active
+      );
+
+    });
+
+
+
+  const server =
+    serverCache[guildId];
+
+
+  if (!server) return;
+
+
+  updateChart(
+    charts[guildId],
+    getChartConfig(
+      server,
+      tabType
+    )
+  );
+
+}
+
+
+
+async function updateStatsLive(){
+
+  try {
+
+
+    const response =
+      await fetch('/api/stats');
+
+
+    if (!response.ok) return;
+
+
+    const data =
+      await response.json();
+
+
+
+    data.forEach(rawServer=>{
+
+
+      const server =
+        normalizeServer(rawServer);
+
+
+
+      serverCache[server.guildId] =
+        server;
+
+
+
+      const card =
+        document.querySelector(
+          `.server-card[data-guild="${server.guildId}"]`
+        );
+
+
+
       if(!card) return;
 
-      card.querySelectorAll('.tab-btn').forEach(btn => {
-        if(btn.getAttribute('onclick').includes(`'${tabType}'`)) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
 
-      try {
-        const res = await fetch('/api/stats');
-        const data = await res.json();
-        const serverStats = data.find(s => s.guildId === guildId);
-        
-        if (serverStats) {
-          const chart = charts[guildId];
-          if(chart) {
-            chart.destroy();
-            const ctx = document.getElementById(`chart-${guildId}`).getContext('2d');
-            charts[guildId] = new Chart(ctx, getChartConfig(serverStats, tabType));
-          }
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
 
-    async function updateStatsLive() {
-      try {
-        const response = await fetch('/api/stats');
-        if (!response.ok) return;
-        const data = await response.json();
+      safeText(
+        card.querySelector('.member-count'),
+        server.memberCount
+      );
 
-        data.forEach(serverStats => {
-          const card = document.querySelector(`.server-card[data-guild="${serverStats.guildId}"]`);
-          if (!card) return;
 
-          card.querySelector('.member-count').innerText = serverStats.memberCount;
-          card.querySelector('.online-count').innerText = serverStats.onlineCount;
-          card.querySelector('.cnt-day').innerText = serverStats.periods.day;
-          card.querySelector('.cnt-week').innerText = serverStats.periods.week;
-          card.querySelector('.cnt-month').innerText = serverStats.periods.month;
-          card.querySelector('.cnt-all').innerText = serverStats.periods.all;
+      safeText(
+        card.querySelector('.online-count'),
+        server.onlineCount
+      );
 
-          const activeTab = currentTabs[serverStats.guildId];
-          const chart = charts[serverStats.guildId];
 
-          if (chart) {
-            chart.destroy();
-            const ctx = document.getElementById(`chart-${serverStats.guildId}`).getContext('2d');
-            charts[serverStats.guildId] = new Chart(ctx, getChartConfig(serverStats, activeTab));
-          }
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    }
+      safeText(
+        card.querySelector('.cnt-day'),
+        server.periods.day
+      );
 
-    document.addEventListener("DOMContentLoaded", () => {
-      initDashboard();
-      setInterval(updateStatsLive, 5000);
+
+      safeText(
+        card.querySelector('.cnt-week'),
+        server.periods.week
+      );
+
+
+      safeText(
+        card.querySelector('.cnt-month'),
+        server.periods.month
+      );
+
+
+      safeText(
+        card.querySelector('.cnt-all'),
+        server.periods.all
+      );
+
+
+
+      const active =
+        currentTabs[server.guildId] || 'day';
+
+
+
+      updateChart(
+        charts[server.guildId],
+        getChartConfig(
+          server,
+          active
+        )
+      );
+
+
     });
-  </script>
-</body>
-</html>
+
+
+  } catch(error){
+
+    console.error(
+      'Live update error:',
+      error
+    );
+
+  }
+
+}
+
+
+
+document.addEventListener(
+  'DOMContentLoaded',
+  ()=>{
+
+    initDashboard();
+
+    setInterval(
+      updateStatsLive,
+      5000
+    );
+
+  }
+);
+</script>
