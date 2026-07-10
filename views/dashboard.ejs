@@ -5,33 +5,29 @@
   <title>Statbot Dashboard</title>
   <script>
     /*! Chart.js v4.4.1 | (c) Chart.js Contributors | MIT License */
-    !function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):(t="undefined"!=typeof globalThis?globalThis:t||self).Chart=e()}(this,(function(){"use strict";window.Chart=class{constructor(c,config){this.ctx=c;this.config=config;this.id=Math.random();window.Chart.instances[this.id]=this;this.init()}init(){this.render()}destroy(){delete window.Chart.instances[this.id];const container=this.ctx.canvas.parentElement;container.innerHTML=`<canvas id="${this.ctx.canvas.id}"></canvas>`}update(){this.render()}render(){const ctx=this.ctx;const w=ctx.canvas.width=ctx.canvas.parentElement.clientWidth;const h=ctx.canvas.height=ctx.canvas.parentElement.clientHeight;ctx.clearRect(0,0,w,h);const data=this.config.data.datasets.data;const labels=this.config.data.labels;const max=Math.max(...data,5);ctx.strokeStyle='#222';ctx.lineWidth=1;for(let i=0;i<=4;i++){let y=20+i*(h-50)/4;ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(w-10,y);ctx.stroke();ctx.fillStyle='#aaa';ctx.font='10px monospace';ctx.fillText(Math.round(max-(i*max/4)),5,y+4)}if(this.config.type==='bar'){const barW=Math.min(40, (w-50)/data.length);const totalW=barW*data.length;const startX=(w-50-totalW)/2+40;data.forEach((val,idx)=>{const barH=(val/max)*(h-50);ctx.fillStyle='rgba(0, 255, 0, 0.15)';ctx.fillRect(startX+idx*barW+5,h-30-barH,barW-10,barH);ctx.strokeStyle='#00ff00';ctx.strokeRect(startX+idx*barW+5,h-30-barH,barW-10,barH);ctx.fillStyle='#aaa';ctx.fillText(labels[idx]||'',startX+idx*barW+(barW/2)-10,h-10)})}else{ctx.beginPath();ctx.strokeStyle='#00ff00';ctx.lineWidth=2;const stepX=(w-50)/(data.length-1||1);data.forEach((val,idx)=>{const pointY=h-30-(val/max)*(h-50);if(idx===0)ctx.moveTo(40,pointY);else ctx.lineTo(40+idx*stepX,pointY)});ctx.stroke();ctx.fillStyle='rgba(0,255,0,0.03)';ctx.lineTo(40+(data.length-1)*stepX,h-30);ctx.lineTo(40,h-30);ctx.fill();data.forEach((val,idx)=>{if(idx%Math.ceil(data.length/5)===0||idx===data.length-1){ctx.fillStyle='#aaa';ctx.fillText(labels[idx]||'',40+idx*stepX,h-10)}})}}};window.Chart.instances={};return window.Chart}));
+    !function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):(t="undefined"!=typeof globalThis?globalThis:t||self).Chart=e()}(this,(function(){"use strict";window.Chart=class{constructor(c,config){this.ctx=c;this.config=config;this.id=Math.random();window.Chart.instances[this.id]=this;this.init()}init(){this.render()}destroy(){delete window.Chart.instances[this.id];const container=this.ctx.canvas.parentElement;container.innerHTML=`<canvas id="${this.ctx.canvas.id}"></canvas>`}update(){this.render()}render(){const ctx=this.ctx;const w=ctx.canvas.width=ctx.canvas.parentElement.clientWidth;const h=ctx.canvas.height=ctx.canvas.parentElement.clientHeight;ctx.clearRect(0,0,w,h);const data=this.config.data.datasets[0].data;const labels=this.config.data.labels;const max=Math.max(...data,5);ctx.strokeStyle='#222';ctx.lineWidth=1;for(let i=0;i<=4;i++){let y=20+i*(h-50)/4;ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(w-10,y);ctx.stroke();ctx.fillStyle='#aaa';ctx.font='10px monospace';ctx.fillText(Math.round(max-(i*max/4)),5,y+4)}if(this.config.type==='bar'){const barW=(w-50)/data.length;data.forEach((val,idx)=>{const barH=(val/max)*(h-50);ctx.fillStyle='rgba(0, 255, 0, 0.2)';ctx.fillRect(40+idx*barW,h-30-barH,barW-10,barH);ctx.strokeStyle='#00ff00';ctx.strokeRect(40+idx*barW,h-30-barH,barW-10,barH);ctx.fillStyle='#aaa';ctx.fillText(labels[idx]||'',40+idx*barW,h-10)})}else{ctx.beginPath();ctx.strokeStyle='#00ff00';ctx.lineWidth=2;const stepX=(w-50)/(data.length-1||1);data.forEach((val,idx)=>{const pointY=h-30-(val/max)*(h-50);if(idx===0)ctx.moveTo(40,pointY);else ctx.lineTo(40+idx*stepX,pointY)});ctx.stroke();ctx.fillStyle='rgba(0,255,0,0.05)';ctx.lineTo(40+(data.length-1)*stepX,h-30);ctx.lineTo(40,h-30);ctx.fill();data.forEach((val,idx)=>{if(idx%Math.ceil(data.length/5)===0||idx===data.length-1){ctx.fillStyle='#aaa';ctx.fillText(labels[idx]||'',40+idx*stepX,h-10)}})}}};window.Chart.instances={};return window.Chart}));
   </script>
   <style>
     .tab-btn {
-      background: #111; color: #0f0; border: 1px solid #222; 
-      padding: 6px 14px; cursor: pointer; border-radius: 6px; font-family: monospace;
-      transition: all 0.2s ease-in-out;
+      background: #222; color: #0f0; border: 1px solid #0f0; 
+      padding: 6px 12px; cursor: pointer; border-radius: 4px; font-family: monospace;
     }
-    .tab-btn:hover { border-color: #0f0; background: #1a1a1a; }
-    .tab-btn.active { background: #0f0; color: #111; font-weight: bold; border-color: #0f0; box-shadow: 0 0 10px rgba(0,255,0,0.2); }
-    .stat-box { background: #111; border: 1px solid #222; padding: 10px; border-radius: 6px; text-align: center; flex: 1; min-width: 60px; transition: background 0.3s ease; }
-    .server-icon { width: 50px; height: 50px; border-radius: 50%; border: 1px solid #0f0; object-fit: cover; box-shadow: 0 0 8px rgba(0,255,0,0.2); }
+    .tab-btn.active { background: #0f0; color: #111; font-weight: bold; }
+    .stat-box { background: #111; border: 1px solid #222; padding: 10px; border-radius: 6px; text-align: center; flex: 1; min-width: 60px; }
+    .server-icon { width: 50px; height: 50px; border-radius: 50%; border: 1px solid #0f0; object-fit: cover; }
     .avatar-placeholder { width: 50px; height: 50px; border-radius: 50%; border: 1px solid #0f0; background: #222; color: #0f0; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .server-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-    .server-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,255,0,0.08); }
   </style>
 </head>
 <body style="background:#111; color:#0f0; font-family: 'Courier New', Arial, sans-serif; padding:20px; max-width: 1200px; margin: 0 auto;">
   
-  <h1 style="text-align: center; border-bottom: 2px dashed #0f0; padding-bottom: 10px; font-weight: normal; letter-spacing: 1px;">Statbot — Аналитика Серверов</h1>
+  <h1 style="text-align: center; border-bottom: 2px dashed #0f0; padding-bottom: 10px;">Statbot — Аналитика Серверов</h1>
   
   <div id="dashboard-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
     <% stats.forEach((s) => { %>
-      <div class="server-card" data-guild="<%= s.guildId %>" style="background:#1a1a1a; padding:20px; border: 1px solid #333; border-radius:12px; width: 360px; position: relative;">
+      <div class="server-card" data-guild="<%= s.guildId %>" style="background:#1a1a1a; padding:20px; border: 1px solid #333; border-radius:12px; width: 360px; box-shadow: 0 4px 15px rgba(0,255,0,0.05); position: relative;">
         
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
-          <h2 style="color: #fff; margin: 0; text-shadow: 0 0 5px rgba(0,255,0,0.3); max-width: 270px; word-wrap: break-word; font-weight: normal;"><%= s.name || 'Сервер' %></h2>
+          <h2 style="color: #fff; margin: 0; text-shadow: 0 0 5px #0f0; max-width: 270px; word-wrap: break-word;"><%= s.name || 'Сервер' %></h2>
           <div>
             <% if (s.iconUrl) { %>
               <img src="<%= s.iconUrl %>" class="server-icon" alt="Icon">
@@ -41,23 +37,23 @@
           </div>
         </div>
         
-        <p style="margin: 5px 0; font-size: 14px; color: #ccc;">Участников: <b class="member-count" style="color: #fff;"><%= s.memberCount %></b> | Онлайн: <b class="online-count" style="color: #00ff00;"><%= s.onlineCount %></b></p>
+        <p style="margin: 5px 0;">Участников: <b class="member-count"><%= s.memberCount %></b> | Онлайн: <b class="online-count" style="color: #00ff00;"><%= s.onlineCount %></b></p>
         
         <div style="display: flex; gap: 8px; margin: 15px 0; font-size: 12px;">
-          <div class="stat-box">День<br><b class="cnt-day" style="color:#fff; font-size: 14px;"><%= s.periods.day %></b></div>
-          <div class="stat-box">Неделя<br><b class="cnt-week" style="color:#fff; font-size: 14px;"><%= s.periods.week %></b></div>
-          <div class="stat-box">Месяц<br><b class="cnt-month" style="color:#fff; font-size: 14px;"><%= s.periods.month %></b></div>
-          <div class="stat-box">Всего<br><b class="cnt-all" style="color:#0f0; font-size: 14px;"><%= s.periods.all %></b></div>
+          <div class="stat-box">День<br><b class="cnt-day" style="color:#fff;"><%= s.periods.day %></b></div>
+          <div class="stat-box">Неделя<br><b class="cnt-week" style="color:#fff;"><%= s.periods.week %></b></div>
+          <div class="stat-box">Месяц<br><b class="cnt-month" style="color:#fff;"><%= s.periods.month %></b></div>
+          <div class="stat-box">Всего<br><b class="cnt-all" style="color:#0f0;"><%= s.periods.all %></b></div>
         </div>
 
-        <div style="display: flex; gap: 5px; margin-bottom: 15px; justify-content: center;">
+        <div style="display: flex; gap: 5px; margin-bottom: 10px; justify-content: center;">
           <button class="tab-btn active" onclick="switchTab('<%= s.guildId %>', 'day')">День</button>
           <button class="tab-btn" onclick="switchTab('<%= s.guildId %>', 'week')">Неделя</button>
           <button class="tab-btn" onclick="switchTab('<%= s.guildId %>', 'month')">Месяц</button>
           <button class="tab-btn" onclick="switchTab('<%= s.guildId %>', 'all')">Всего</button>
         </div>
         
-        <div style="display: block; width: 100%; height: 200px; min-height: 200px; position: relative;">
+        <div style="display: block; width: 100%; height: 200px; min-height: 200px; margin-top: 5px;">
           <canvas id="chart-<%= s.guildId %>"></canvas>
         </div>
       </div>
@@ -95,7 +91,9 @@
         type: chartType,
         data: {
           labels: labels,
-          datasets: [{ data: datasetsData }]
+          datasets: [{
+            data: datasetsData
+          }]
         }
       };
     }
@@ -140,10 +138,9 @@
         if (serverStats) {
           const chart = charts[guildId];
           if(chart) {
-            chart.config.type = getChartConfig(serverStats, tabType).type;
-            chart.config.data.labels = getChartConfig(serverStats, tabType).data.labels;
-            chart.config.data.datasets[0].data = getChartConfig(serverStats, tabType).data.datasets[0].data;
-            chart.update();
+            chart.destroy();
+            const ctx = document.getElementById(`chart-${guildId}`).getContext('2d');
+            charts[guildId] = new Chart(ctx, getChartConfig(serverStats, tabType));
           }
         }
       } catch (err) {
@@ -161,12 +158,8 @@
           const card = document.querySelector(`.server-card[data-guild="${serverStats.guildId}"]`);
           if (!card) return;
 
-          if(card.querySelector('.member-count').innerText != serverStats.memberCount)
-            card.querySelector('.member-count').innerText = serverStats.memberCount;
-            
-          if(card.querySelector('.online-count').innerText != serverStats.onlineCount)
-            card.querySelector('.online-count').innerText = serverStats.onlineCount;
-
+          card.querySelector('.member-count').innerText = serverStats.memberCount;
+          card.querySelector('.online-count').innerText = serverStats.onlineCount;
           card.querySelector('.cnt-day').innerText = serverStats.periods.day;
           card.querySelector('.cnt-week').innerText = serverStats.periods.week;
           card.querySelector('.cnt-month').innerText = serverStats.periods.month;
@@ -176,11 +169,9 @@
           const chart = charts[serverStats.guildId];
 
           if (chart) {
-            const newConfig = getChartConfig(serverStats, activeTab);
-            chart.config.data.labels = newConfig.data.labels;
-            // ИСПРАВЛЕНО: Убран индекс, так как структура библиотеки встроена напрямую
-            chart.config.data.datasets.data = newConfig.data.datasets.data;
-            chart.update();
+            chart.destroy();
+            const ctx = document.getElementById(`chart-${serverStats.guildId}`).getContext('2d');
+            charts[serverStats.guildId] = new Chart(ctx, getChartConfig(serverStats, activeTab));
           }
         });
       } catch (err) {
@@ -192,3 +183,6 @@
       initDashboard();
       setInterval(updateStatsLive, 5000);
     });
+  </script>
+</body>
+</html>
